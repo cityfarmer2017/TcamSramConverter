@@ -6,8 +6,8 @@ main.o : main.cpp
 
 .PHONY : clean
 clean :
-	rm -f *.out *.o
+	rm -f Tcam2Sram *.o
 
 .PHONY : dist-clean
 dist-clean :
-	rm -f *.out *.o *.dat *.txt Tcam2Sram
+	rm -f Tcam2Sram *.o *.dat *.txt

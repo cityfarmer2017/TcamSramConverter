@@ -6,7 +6,6 @@
 #include <regex>
 #include <algorithm>
 #include <unordered_map>
-#include <cstdint>
 #include <iomanip>
 
 const std::unordered_map<std::string, std::string> c2_c4_map = {
@@ -90,7 +89,7 @@ int main(int argc, char *argv[])
         std::cout << "a tcam table must be exactly 32 entries." << std::endl;
         return -1;
     }
-    
+
     auto dst_fname = std::string(std::filesystem::directory_entry(fname).path().stem());
     std::ofstream ofstr;
 
@@ -102,7 +101,7 @@ int main(int argc, char *argv[])
     }
     auto i = 0UL;
     for (const auto &str_vec : str_vec_vec) {
-        ofstr << "sram chip #" << std::setw(2) << std::setfill('0') << i << "\n";
+        ofstr << "//sram chip #" << std::setw(2) << std::setfill('0') << i << "\n";
         for (const auto &str : str_vec) {
             ofstr << str << "\n";
             u32_vec.emplace_back(std::stoul(str, nullptr, 2));
@@ -115,7 +114,7 @@ int main(int argc, char *argv[])
     }
     ofstr << std::flush;
     ofstr.close();
-    
+
     ofstr.open(dst_fname + ".sram.dat", std::ios::binary);
     if (!ofstr.is_open()) {
         std::cout << "cannot open dest file: " << dst_fname + ".sram.dat" << std::endl;
