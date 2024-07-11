@@ -6,20 +6,19 @@
 #include <regex>
 #include <algorithm>
 #include <unordered_map>
-#include <tuple>
 #include <cstdint>
 #include <iomanip>
 
-const std::unordered_map<std::string, std::tuple<char, char, char, char>> c2_c4_map = {
-    {"00", std::make_tuple('1', '0', '0', '0')},
-    {"01", std::make_tuple('0', '1', '0', '0')},
-    {"10", std::make_tuple('0', '0', '1', '0')},
-    {"11", std::make_tuple('0', '0', '0', '1')},
-    {"0x", std::make_tuple('1', '1', '0', '0')},
-    {"x0", std::make_tuple('1', '0', '1', '0')},
-    {"1x", std::make_tuple('0', '0', '1', '1')},
-    {"x1", std::make_tuple('0', '1', '0', '1')},
-    {"xx", std::make_tuple('1', '1', '1', '1')}
+const std::unordered_map<std::string, std::string> c2_c4_map = {
+    {"00", "1000"},
+    {"01", "0100"},
+    {"10", "0010"},
+    {"11", "0001"},
+    {"0x", "1100"},
+    {"x0", "1010"},
+    {"1x", "0011"},
+    {"x1", "0101"},
+    {"xx", "1111"}
 };
 
 int main(int argc, char *argv[])
@@ -77,10 +76,10 @@ int main(int argc, char *argv[])
         auto i = 0UL;
         for (const auto &c2 : str_vec) {
             auto c4 = c2_c4_map.at(c2);
-            str_vec_vec[i][0].insert(0, 1, std::get<0>(c4));
-            str_vec_vec[i][1].insert(0, 1, std::get<1>(c4));
-            str_vec_vec[i][2].insert(0, 1, std::get<2>(c4));
-            str_vec_vec[i][3].insert(0, 1, std::get<3>(c4));
+            str_vec_vec[i][0].insert(0, 1, c4[0]);
+            str_vec_vec[i][1].insert(0, 1, c4[1]);
+            str_vec_vec[i][2].insert(0, 1, c4[2]);
+            str_vec_vec[i][3].insert(0, 1, c4[3]);
             ++i;
         }
 
