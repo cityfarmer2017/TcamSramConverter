@@ -48,16 +48,16 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    std::string line;
-    std::size_t sz = 0;
-    std::vector<std::vector<std::string>> str_vec_vec{20};
-    for (auto &strv : str_vec_vec) {
-        strv.emplace_back("");
-        strv.emplace_back("");
-        strv.emplace_back("");
-        strv.emplace_back("");
+    std::vector<std::vector<std::string>> sram_chip_vec{20};
+    for (auto &sram_entry_vec : sram_chip_vec) {
+        sram_entry_vec.emplace_back("");
+        sram_entry_vec.emplace_back("");
+        sram_entry_vec.emplace_back("");
+        sram_entry_vec.emplace_back("");
     }
 
+    std::string line;
+    std::size_t sz = 0;
     while (getline(ifstr, line)) {
         const std::regex r(R"([01x]{40})");
         if (!regex_match(line, r)) {
@@ -65,20 +65,20 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        std::vector<std::string> str_vec;
+        std::vector<std::string> tcam_entry_vec;
         for (auto i = 0UL; i < line.size(); ++i, ++i) {
-            str_vec.emplace_back(line.substr(i, 2));
+            tcam_entry_vec.emplace_back(line.substr(i, 2));
         }
 
-        std::reverse(str_vec.begin(), str_vec.end());
+        std::reverse(tcam_entry_vec.begin(), tcam_entry_vec.end());
 
         auto i = 0UL;
-        for (const auto &c2 : str_vec) {
+        for (const auto &c2 : tcam_entry_vec) {
             auto c4 = c2_c4_map.at(c2);
-            str_vec_vec[i][0].insert(0, 1, c4[0]);
-            str_vec_vec[i][1].insert(0, 1, c4[1]);
-            str_vec_vec[i][2].insert(0, 1, c4[2]);
-            str_vec_vec[i][3].insert(0, 1, c4[3]);
+            sram_chip_vec[i][0].insert(0, 1, c4[0]);
+            sram_chip_vec[i][1].insert(0, 1, c4[1]);
+            sram_chip_vec[i][2].insert(0, 1, c4[2]);
+            sram_chip_vec[i][3].insert(0, 1, c4[3]);
             ++i;
         }
 
@@ -100,14 +100,14 @@ int main(int argc, char *argv[])
         return -1;
     }
     auto i = 0UL;
-    for (const auto &str_vec : str_vec_vec) {
+    for (const auto &sram_entry_vec : sram_chip_vec) {
         ofstr << "//sram chip #" << std::setw(2) << std::setfill('0') << i << "\n";
-        for (const auto &str : str_vec) {
-            ofstr << str << "\n";
-            u32_vec.emplace_back(std::stoul(str, nullptr, 2));
+        for (const auto &entry_str : sram_entry_vec) {
+            ofstr << entry_str << "\n";
+            u32_vec.emplace_back(std::stoul(entry_str, nullptr, 2));
             #ifdef DEBUG
-            std::cout << str << "\n";
-            std::cout << std::stoul(str, nullptr, 2) << "\n";
+            std::cout << entry_str << "\n";
+            std::cout << std::stoul(entry_str, nullptr, 2) << "\n";
             #endif
         }
         ++i;
