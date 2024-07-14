@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <iomanip>
 
+constexpr auto MAX_STATE_NO = 256;
+
 const std::unordered_map<std::string, std::string> c2_c4_map = {
     {"00", "1000"},
     {"01", "0100"},
@@ -26,28 +28,44 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    std::vector<std::vector<std::string>> sram_chip_vec{20};
+    std::vector<std::filesystem::path> src_file_paths;
 
-    for (auto j = 1; j < argc; ++j) {
-        if (!std::filesystem::exists(argv[j])) {
+    for (auto i = 1; i < argc; ++i) {
+        if (!std::filesystem::exists(argv[i])) {
             std::cout << "source file dose not exists." << std::endl;
             return -1;
         }
+        
+        if (std::filesystem::is_regular_file(argv[i])) {
+            auto path = std::filesystem::directory_entry(argv[i]).path();
+            if (path.extension() != ".tcam") {
+                std::cout << "source file must be a '.tcam' file." << std::endl;
+                return -1;
+            }
 
-        if (!std::filesystem::is_regular_file(argv[j])) {
-            std::cout << "source must be a regular file." << std::endl;
-            return -1;
+            src_file_paths.emplace_back(path);
+        } else {
+            for (const auto &entry : std::filesystem::directory_iterator(argv[i])) {
+                if (entry.path().extension() != ".tcam") {
+                    continue;
+                }
+                src_file_paths.emplace_back(entry.path());
+            }
         }
+    }
 
-        if (std::filesystem::directory_entry(argv[j]).path().extension() != ".tcam") {
-            std::cout << "source file must be a '.tcam' file." << std::endl;
-            return -1;
-        }
+    if (src_file_paths.size() >= MAX_STATE_NO) {
+        std::cout << "the number of tcam tables shall not exceed " << MAX_STATE_NO << std::endl;
+        return -1;
+    }
 
-        auto fname = std::string(argv[j]);
-        std::ifstream ifstr(fname);
+    std::vector<std::vector<std::string>> sram_chip_vec{20};
+
+    std::size_t n = 0;
+    for (const auto &path : src_file_paths) {
+        std::ifstream ifstr(path.filename().c_str());
         if (!ifstr.is_open()) {
-            std::cout << "cannot open source file: " << fname << std::endl;
+            std::cout << "cannot open source file: " << path.filename().c_str() << std::endl;
             return -1;
         }
 
@@ -77,10 +95,10 @@ int main(int argc, char *argv[])
             auto i = 0UL;
             for (const auto &c2 : tcam_entry_vec) {
                 auto c4 = c2_c4_map.at(c2);
-                sram_chip_vec[i][(j-1)*4+0].insert(0, 1, c4[0]);
-                sram_chip_vec[i][(j-1)*4+1].insert(0, 1, c4[1]);
-                sram_chip_vec[i][(j-1)*4+2].insert(0, 1, c4[2]);
-                sram_chip_vec[i][(j-1)*4+3].insert(0, 1, c4[3]);
+                sram_chip_vec[i][n*4+0].insert(0, 1, c4[0]);
+                sram_chip_vec[i][n*4+1].insert(0, 1, c4[1]);
+                sram_chip_vec[i][n*4+2].insert(0, 1, c4[2]);
+                sram_chip_vec[i][n*4+3].insert(0, 1, c4[3]);
                 ++i;
             }
 
@@ -91,9 +109,11 @@ int main(int argc, char *argv[])
             std::cout << "a tcam table must be exactly 32 entries." << std::endl;
             return -1;
         }
+
+        ++n;
     }
 
-    auto dst_fname = std::string(std::filesystem::directory_entry(std::string(argv[1])).path().stem());
+    auto dst_fname = std::string(src_file_paths.cbegin()->stem());
     std::ofstream ofstr;
 
     std::vector<std::uint32_t> u32_vec;
