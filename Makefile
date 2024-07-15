@@ -1,8 +1,11 @@
-Tcam2Sram : main.o
-	g++ -o Tcam2Sram main.o
+Tcam2Sram : main.o utility.o
+	g++ -o Tcam2Sram main.o utility.o
 
-main.o : main.cpp
-	g++ -c -g -Wall -DDEBUG main.cpp
+main.o : main.cpp utility.h
+	g++ -c -g -Wall main.cpp
+
+utility.o : utility.cpp
+	g++ -c -g -Wall utility.cpp
 
 .PHONY : clean
 clean :
