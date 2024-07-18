@@ -1,8 +1,12 @@
+/**
+ * Copyright [2024] <wangdianchao@ehtcn.com>
+ */
 #include <unordered_map>
 #include <fstream>
-#include <regex>
+#include <regex>  // NOLINT [build/include_subdir]
 #include <iostream>
-#include "utility.h"
+#include <filesystem>
+#include "match_action_id.h"  // NOLINT [build/include_subdir]
 
 constexpr auto MAX_ACTION_ID = 256 * 32 - 1;
 
@@ -18,14 +22,14 @@ const std::unordered_map<std::string, std::string> c2_c4_map = {
     {"xx", "1111"}
 };
 
-int convert_tcam_2_sram(const std::vector<std::filesystem::path> &tcam_file_paths)
-{
+int convert_tcam_2_sram(const std::map<std::string, std::string> &stem_parent_map) {
     std::vector<std::vector<std::string>> sram_chip_vec{20};
     std::size_t n = 0;
-    for (const auto &path : tcam_file_paths) {
-        std::ifstream ifstr(path.filename().string());
+    for (const auto &stem_parent : stem_parent_map) {
+        auto path = std::filesystem::path(stem_parent.second + "/" + stem_parent.first + ".tcam");
+        std::ifstream ifstr(path);
         if (!ifstr.is_open()) {
-            std::cout << "cannot open source file: " << path.filename().c_str() << std::endl;
+            std::cout << "cannot open source file: " << path.string() << std::endl;
             return -1;
         }
 
@@ -73,7 +77,7 @@ int convert_tcam_2_sram(const std::vector<std::filesystem::path> &tcam_file_path
         ++n;
     }
 
-    auto dst_fname = tcam_file_paths.cbegin()->stem().string();
+    auto dst_fname = stem_parent_map.cbegin()->second + "/" + stem_parent_map.cbegin()->first;
     std::ofstream ofstr;
 
     std::vector<std::uint32_t> u32_vec;
@@ -109,14 +113,14 @@ int convert_tcam_2_sram(const std::vector<std::filesystem::path> &tcam_file_path
     return 0;
 }
 
-int extract_action_ids(const std::vector<std::filesystem::path> &aid_file_paths)
-{
+int extract_action_ids(const std::map<std::string, std::string> &stem_parent_map) {
     std::vector<std::uint16_t> u16_vec;
 
-    for (const auto &path : aid_file_paths) {
-        std::ifstream ifstr(path.filename().string());
+    for (const auto &stem_parent : stem_parent_map) {
+        auto path = std::filesystem::path(stem_parent.second + "/" + stem_parent.first + ".aid");
+        std::ifstream ifstr(path);
         if (!ifstr.is_open()) {
-            std::cout << "cannot open source file: " << path.filename().string() << std::endl;
+            std::cout << "cannot open source file: " << path.string() << std::endl;
             return -1;
         }
 
@@ -152,9 +156,10 @@ int extract_action_ids(const std::vector<std::filesystem::path> &aid_file_paths)
         }
     }
 
-    std::ofstream ofstr(aid_file_paths.cbegin()->stem().string() + ".aid.dat", std::ios::binary);
+    auto dst_fname = stem_parent_map.cbegin()->second + "/" + stem_parent_map.cbegin()->first + ".aid.dat";
+    std::ofstream ofstr(dst_fname, std::ios::binary);
     if (!ofstr.is_open()) {
-        std::cout << "cannot open dest file: " << aid_file_paths.cbegin()->stem().string() + ".sram.dat" << std::endl;
+        std::cout << "cannot open dest file: " << dst_fname << std::endl;
         return -1;
     }
     ofstr.write(reinterpret_cast<const char*>(u16_vec.data()), sizeof(u16_vec[0]) * u16_vec.size());
